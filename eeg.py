@@ -70,7 +70,7 @@ def _event_stream(shutdown_func, host, port):
 		try:
 			data = json.loads(temp_json)
 		except ValueError:
-			stderr.write('Error while decoding JSON object, discarding data')
+			pass#stderr.write('Error while decoding JSON object, discarding data')
 		if data:
 			if eSense in data and eegPower in data:
 				yield dict(zip(brain_parameters, _extract_tuple(data)))
