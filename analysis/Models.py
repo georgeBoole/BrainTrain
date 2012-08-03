@@ -12,6 +12,7 @@ class Session(object):
 
     Syntax: sessobj = Session(session_number, start_time, username, label_key, session_data)
     Note that session_data should be passed in as list of all of the data points
+    
     """
 
     def __init__(self, sessnum, start_time, username, label_key, session_data):
@@ -28,6 +29,7 @@ class Session(object):
         Get the list of feature keys for a random data point in the session.
 
         Returns the feature keys of the randomly selected entry.
+        
         """
 
         num_entries = len(self.data)
@@ -82,6 +84,7 @@ class Featureset(object):
     from each session to verify features are aligned.
     Syntax: Featureset.check_features({data dictionary})
     Returns True if features are good, otherwise False
+
     """
 
     def __init__(self, label_key='label', feature_set=None):
@@ -97,6 +100,7 @@ class Featureset(object):
         Add a feature to the featureset list.
 
         Returns :True if successful.
+        
         """
 
         if feature_name not in self.features:
@@ -109,10 +113,11 @@ class Featureset(object):
         Pass in the raw datapoint data to check for featureset matching.
 
         Returns :True if successful, :False if not.
+        
         """
 
         # Get feature keys for the current session
-        session_features = data.keys()
+        session_features = data
         # If there are no features in the feature set, record
         # the features from the current session
         if len(self.features) == 0:
@@ -154,6 +159,7 @@ class DataPoint(object):
     Datapoints are the individual points of measurement taken in each session.
 
     Syntax: DataPoint(user, session_number, data)
+    
     """
 
     def __init__(self, username, sessnum, data):
@@ -169,6 +175,7 @@ class DataPoint(object):
         the unpickled file, this is unpickled_contents['data'].
         The keys of the :data dictionary should be feature names,
         and the values should be observed values.
+        
         """
 
         self.username = username
@@ -190,6 +197,16 @@ class DataPoint(object):
 
         return { 'user': self.username, 'sessnum': self.sessnum, 'data': self.data }
 
+    def get_user(self):
+        "Return the username associated with the point."
+
+        return self.username
+
+    def get_sessnum(self):
+        "Return the session number associated with the point."
+
+        return self.sessnum
+
 
 class TrainingSet(object):
     """
@@ -201,6 +218,7 @@ class TrainingSet(object):
     classifying (e.g. 'label')
     and
     full_training_set is a list of the contents of all of the output files.
+
     """
 
 
@@ -214,7 +232,9 @@ class TrainingSet(object):
 
         :keyname represents the name of the indepdendent variable for which we will try to
         make predictions.
-        :training_data represents the file contents of the saved session files.
+        :training_data represents the file contents of the saved session
+        files, passed to the initializer as a list of file contents.
+
         """
 
         # Create a new featureset object and pass it the name of the prediction target variable
@@ -234,6 +254,7 @@ class TrainingSet(object):
         Takes raw training data and turns it into modular sessions for manipulation
 
         Returns :True if it is successful, otherwise returns :False.
+
         """
 
         sessions = []
@@ -252,7 +273,7 @@ class TrainingSet(object):
             if not self.featureset.check_features(features):
                 sys.stderr.write("Feature set mismatch!")
                 return False
-            label_vals.add(sess.get_label_keys())
+            map(lambda x: label_vals.add(x), sess.get_label_keys())
             sessions.append(sess)
         # Move sessions to the class instance, set_label_vals on
         # self.featureset to have a list of possible values for your label key
@@ -266,12 +287,13 @@ class TrainingSet(object):
 
         :data should be the raw, unpickled dictionary of a single session
         file.
+
         """
 
         start_time = data['start_time']
         username = data['user']
         sessnum = data['session_number']
         sess_data = data['data']
-        new_session = Session(sessnum, start_time, username, self.train_on_key, sess_data)
+        new_session = Session(sessnum, start_time, username, self.classify_on_key, sess_data)
         return new_session
 

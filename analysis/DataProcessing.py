@@ -42,7 +42,11 @@ class DataProcessor(object):
         if point_list == None:
             point_list = self.datapoints
         # Make the point list a list of the full data
-        point_list = map(lambda x: x.get_full_data(), point_list)
+        expanded_points = []
+        for session_points in point_list:
+            map(lambda x: expanded_points.append(x.get_full_data()), session_points)
+        point_list = expanded_points
+#       point_list = map(lambda x: x.get_full_data(), point_list)
         if label_name == None:
             for label in label_values:
                 matching_points[label] = filter(lambda x: x['data'][label_key] == label, point_list)
@@ -61,7 +65,10 @@ class DataProcessor(object):
         matching_points = {}
         if point_list == None:
             point_list = self.datapoints
-        point_list = map(lambda x: x.get_full_data(), point_list)
+        expanded_points = []
+        for session_points in point_list:
+            map(lambda x: expanded_points.append(x.get_full_data()), session_points)
+        point_list = expanded_points
         if user_name == None:
             for point in point_list:
                 user = point['user']
@@ -82,9 +89,12 @@ class DataProcessor(object):
         matching_points = {}
         if session_num == None and user_name == None:
             return self.get_points_by_user(user_name=user_name, point_list=point_list)
-        else if point_list == None:
+        elif point_list == None:
             point_list = self.datapoints
-        point_list = map(lambda x: x.get_full_data(), point_list)
+        expanded_points = []
+        for session_points in point_list:
+            map(lambda x: expanded_points.append(x.get_full_data()), session_points)
+        point_list = expanded_points
         if session_num != None:
             matching_points[session_num] = filter(lambda x: x['sessnum'] == session_num, point_list)
         else:
@@ -108,7 +118,10 @@ class DataProcessor(object):
         matching_points = {}
         if point_list == None:
             point_list = self.datapoints
-        point_list = map(lambda x: x.get_full_data(), point_list)
+        expanded_points = []
+        for session_points in point_list:
+            map(lambda x: expanded_points.append(x.get_full_data()), session_points)
+        point_list = expanded_points
         if feature_name == None:
             for point in point_list:
                 for k,v in point['data']:
@@ -118,60 +131,68 @@ class DataProcessor(object):
             matching_points[feature_name] = map(lambda x: x['data'][feature_name], point_list)
         return matching_points
 
-    def get_point_selection(self, label=None, user=None, session=None, feature=None, point_list=None):
+    def get_point_selection(self, label=None, user=None, session_number=None, feature=None):
         matching_points = []
         label_key = self.featureset.get_label_key()
-        if point_list == None:
-            point_list = self.datapoints
-        point_list = map(lambda x: x.get_full_data(), point_list)
-        if session is not None and not user:
-            return False
-        else if not label and not user and not session and not feature:
-            # return all points
-            matching_points = point_list
-        else if not label and not user:
-            # we have feature only
-            matching_points = map(lambda x: x['data'][feature], point_list)
-        else if not label and not session:
-            # we have user and feature
-            matching_points = filter(lambda y: y['user'] == user, map(lambda x: x['data'][feature], point_list))
-            # matching_points[feature] = matching_points[user]
-        else if not label and not feature:
-            # we have user and session
-            matching_points = filter(lambda x: x['user'] == user, point_list)
-            matching_points = filter(lambda x: x['sessnum'] == session, matching_points)
-        else if not feature and not session:
-            # we have label and user
-            matching_points = filter(lambda x: x['user'] == user, point_list)
-            matching_points = filter(lambda x: x['data'][label_key] == label, matching_points)
-        else if not user:
-            # we have label and feature
-            matching_points = map(lambda y: y['data'][feature], filter(lambda x: x['data'][label_key] == label, point_list))
-        else if not label:
-            # we have user, session and feature
-            matching_points = filter(lambda y: y['sessnum'] == session, filter(lambda x: x['user'] == user, point_list))
-            matching_points = map(lambda x: x['data'][feature], matching_points)
-        else:
-            matching_points = filter(lambda y: y['sessnum'] == session, filter(lambda x: x['user'] == user, point_list))
-            matching_points = map(lambda x: x['data'][feature], matching_points)           
-            matching_points = filter(lambda x: x['data'][label_key] == label, matching_points)
-        return matching_points
-        
-    def get_mean(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
-        pass
+        point_list = self.datapoints
+        expanded_points = []
+        for session_points in point_list:
+            map(lambda x: expanded_points.append(x), session_points)
+        point_list = expanded_points
+        if label:
+            point_list = filter(lambda x: x.get_feature(label_key) == label, point_list)
+        if user:
+            point_list = filter(lambda x: x.get_user() == user, point_list)
+            if session_number:
+                point_list = filter(lambda x: x.get_sessnum() == session_number, point_list)
+        if feature:
+            point_list = { 
+                    feature : map(lambda x: x.get_feature(feature), point_list),
+                    }
+#       matching_points = map(lambda x: x.get_full_data(), point_list)
+#       return matching_points
+        return point_list
 
-    def get_stdev(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
+    def get_mean(self, label=None, user=None, session_number=None, feature=None):
+        points = self.get_point_selection(label=label, user=user, 
+                session_number=session_number, feature=feature)
+        output = {}
+        for key, val in points.iteritems():
+            output[key] = numpy.mean(numpy.array(val))
+        return output
 
-    def get_variance(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
+    def get_stdev(self, label=None, user=None, session_number=None, feature=None):
+        points = self.get_point_selection(label=label, user=user, 
+                session_number=session_number, feature=feature)
+        output = {}
+        for key, val in points.iteritems():
+            output[key] = numpy.std(numpy.array(val))
+        return output
 
-    def get_covariance(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
+    def get_variance(self, label=None, user=None, session_number=None, feature=None):
+        points = self.get_point_selection(label=label, user=user, 
+                session_number=session_number, feature=feature)
+        output = {}
+        for key, val in points.iteritems():
+            output[key] = numpy.array(val).var()
+        return output
+        # you can use pointarray.var(axis=0 or 1) for column and row variance
 
-    def get_median(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
+#    def get_covariance(label=None, user=None, session=None, feature=None):
+#        points = self.get_point_selection(label, user, session, feature)
 
-    def get_mode(label=None, user=None, session=None, feature=None):
-        points = self.get_point_selection(label, user, session, feature)
+    def get_median(self, label=None, user=None, session_number=None, feature=None):
+        points = self.get_point_selection(label=label, user=user, 
+                session_number=session_number, feature=feature)
+        output = {}
+        for key, val in points.iteritems():
+            output[key] = numpy.median(numpy.array(val))
+        return output
+
+    def get_mode(self, label=None, user=None, session_number=None, feature=None):
+        points = self.get_point_selection(label=label, user=user, 
+                session_number=session_number, feature=feature)
+        output = {}
+        for key, val in points.iteritems():
+            output[key] = numpy.mean(numpy.array(val))
+        return output
