@@ -29,12 +29,20 @@ def build_text_surface(text_string, max_width, font, color=white, bg_color=black
 	h = lambda t: sz(t)[1]
 	text_lines = []
 	temp_line = ''
-	for letter in text_string:
-		if w(temp_line + letter) <= max_width:
-			temp_line += letter
+	#for letter in text_string:
+	#	if w(temp_line + letter) <= max_width:
+	#		temp_line += letter
+	#	else:
+	#		text_lines.append(temp_line)
+	#		temp_line = letter
+	#if len(temp_line) > 0:
+	#	text_lines.append(temp_line)
+	for word in text_string.split(' '):
+		if w(temp_line + ' ' + word) <= max_width:
+			temp_line += ' %s' % word
 		else:
 			text_lines.append(temp_line)
-			temp_line = letter
+			temp_line = word
 	if len(temp_line) > 0:
 		text_lines.append(temp_line)
 	h_sep = max([h(x) for x in text_lines])
@@ -80,3 +88,6 @@ class ProgressBar(object):
 		
 	def report_progress(self, progress_change):
 		self.load += progress_change
+		
+	def set_progress(self, progress):
+		self.load = progress
