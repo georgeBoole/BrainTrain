@@ -194,7 +194,7 @@ def runTrainer(screen, manager):
 		evts = []
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				return
+				break
 			else:
 				evts.append(event)
 		manager.update(evts)
