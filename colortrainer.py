@@ -12,11 +12,16 @@ from eeg import MindStream
 from scene_management import Scene, SceneManager, QUIT_SCENE_MANAGER_KEYWORD
 
 # constants
+white = (255,255,255)
+black = (0,0,0)
 red = (255,0,0)
-green = (0,255,0)
-blue = (0,0,255)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+green = (107,255,113)
+blue = (58,167,255)
+magenta = (147,112,219) 
+yellow = (255,244,80)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 color_set = (red, green, blue)
-text_color = (0,191,255)
+text_color = white
 background_color = (50,50,50)
 
 SCREEN_SIZE = (WIDTH, HEIGHT) = (1000, 800)
@@ -193,15 +198,18 @@ def runTrainer(screen, manager):
 	while manager.is_running():
 		evts = []
 		for event in pygame.event.get():
+			#Ends program if the 'x' GUI element is clicked
 			if event.type == pygame.QUIT:
-				break
+				#Ends pygame
+				pygame.quit()
+				#Quits all active threads
+				os._exit(1)
 			else:
 				evts.append(event)
 		manager.update(evts)
 		screen.blit(manager.render(), (0,0))
 		pygame.display.flip()
 	print 'finished running trainer program'
-	pygame.quit()
 
 def main():
 	# begin connecting asap since it takes a while
@@ -233,9 +241,16 @@ def main():
 	pickle.dump(pdump, open(output_filename, 'wb'))
 	pickle.dump(user_configuration, open(CONFIG_OBJECT_FILENAME, 'wb'))
 	print 'training data dumped to file, exiting program'
-
+	
 if __name__ == '__main__':
 	main()
+	#Ends program once training is finished
+	#Quits pygame
+	pygame.quit()
+	#Quits all active threads
+	os._exit(1)
+	
+	
 	
 	
 	
